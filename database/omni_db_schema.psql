@@ -120,7 +120,8 @@ create table if not exists AddressStats (
 create table if not exists AddressesInWallets (		/* many-to-many */
 	Address varchar(64) not null		/* Address must exist in the AddressBalances table */
 	, WalletID uuid	not null		/* WalletID must exist in the Wallets table */
-
+	, protocol Protocol
+	, propertyid bigint 
 	, primary key (WalletID, Address, protocol, propertyid)
 	, foreign key (WalletID) references Wallets on delete CASCADE on update CASCADE 	/* del/upd rows here if corresponding row is deleted/updated */
         , foreign key (address, protocol, propertyid) references addressbalances
