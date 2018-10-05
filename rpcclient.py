@@ -36,19 +36,37 @@ class RPCHost():
             self._url = "http://"+RPCUSER+":"+RPCPASS+"@"+RPCHOST+":"+RPCPORT
         self._headers = {'content-type': 'application/json'}
     def call(self, rpcMethod, *params):
+        print("origin rpcMethod",rpcMethod)
+        print("origin params",params)
+        if (rpcMethod.find("_MP") > -1):
+            rpcMethod = "omni_"+Method_split[0]
+            print("new rpcMethod",rpcMethod)
         payload = json.dumps({"method": rpcMethod, "params": list(params), "jsonrpc": "2.0"})
         tries = 10
         hadConnectionFailures = False
         while True:
             try:
-                response = self._session.post(self._url, headers=self._headers, data=payload, verify=False)
+                print("call hcd")
             except requests.exceptions.ConnectionError:
-                tries -= 1
-                if tries == 0:
-                    raise Exception('Failed to connect for remote procedure call.')
-                hadFailedConnections = True
-                print("Couldn't connect for remote procedure call, will sleep for ten seconds and then try again ({} more tries)".format(tries))
-                time.sleep(10)
+                try:
+                    print("call hcwallet")
+                except requests.exceptions.ConnectionError:
+                    tries -= 1
+                    if tries == 0:
+                        raise Exception('Failed to connect for remote procedure call.')
+                    hadFailedConnections = True
+                    print("Couldn't connect for remote procedure call, will sleep for ten seconds and then try again ({} more tries)".format(tries))
+                    time.sleep(10)
+                else:
+                    if hadConnectionFailures:
+                        print('Connected for remote procedure call after retry.')
+                    break
+                # tries -= 1
+                # if tries == 0:
+                #     raise Exception('Failed to connect for remote procedure call.')
+                # hadFailedConnections = True
+                # print("Couldn't connect for remote procedure call, will sleep for ten seconds and then try again ({} more tries)".format(tries))
+                # time.sleep(10)
             else:
                 if hadConnectionFailures:
                     print('Connected for remote procedure call after retry.')
