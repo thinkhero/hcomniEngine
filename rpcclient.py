@@ -47,9 +47,11 @@ class RPCHost():
         while True:
             try:
                 print("call hcd")
+                response = self._session.post(self._url, headers=self._headers, data=payload, verify=False)
             except requests.exceptions.ConnectionError:
                 try:
                     print("call hcwallet")
+                    response = self._session.post(self._hcwalletUrl, headers=self._headers, data=payload, verify=False)
                 except requests.exceptions.ConnectionError:
                     tries -= 1
                     if tries == 0:
