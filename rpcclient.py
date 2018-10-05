@@ -39,9 +39,12 @@ class RPCHost():
         print("origin rpcMethod",rpcMethod)
         print("origin params",params)
         if (rpcMethod.find("_MP") > -1):
+            print("rpcMethod container _MP")
+            Method_split = rpcMethod.split("_")
             rpcMethod = "omni_"+Method_split[0]
             print("new rpcMethod",rpcMethod)
         payload = json.dumps({"method": rpcMethod, "params": list(params), "jsonrpc": "2.0"})
+        print ("rpcclient.py:",payload)
         tries = 10
         hadConnectionFailures = False
         while True:
