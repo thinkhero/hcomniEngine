@@ -52,11 +52,11 @@ class RPCHost():
         while True:
             try:
                 if (rpcMethod.find("omni") >-1):
-				    print("call hcd")
-					print("request method contain omni")
+		    print("call hcd")
+		    print("request method contain omni")
                     response = self._session.post(self._hcwalletUrl, headers=self._headers, data=payload, verify=False)
                 else:
-				    print("call hcwallet first")
+		    print("call hcwallet first")
                     response = self._session.post(self._url, headers=self._headers, data=payload, verify=False)
             except requests.exceptions.ConnectionError:
                 try:
