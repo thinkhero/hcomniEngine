@@ -38,7 +38,7 @@ class RPCHost():
 	    self._hcwalletUrl = "http://"+RPCUSER+":"+RPCPASS+"@"+RPCHOST+":"+"12010"
         self._headers = {'content-type': 'application/json'}
     def call(self, rpcMethod, *params):
-	print("origin rpcMethod",rpcMethod)
+        print("-----begin to call:origin rpcMethod",rpcMethod)
         print("origin params",params)
         if (rpcMethod.find("_MP") > -1):
             print("rpcMethod container _MP")
@@ -51,11 +51,12 @@ class RPCHost():
         hadConnectionFailures = False
         while True:
             try:
-                print("call hcd")
                 if (rpcMethod.find("omni") >-1):
-                    print("omni request method")
+				    print("call hcd")
+					print("request method contain omni")
                     response = self._session.post(self._hcwalletUrl, headers=self._headers, data=payload, verify=False)
                 else:
+				    print("call hcwallet first")
                     response = self._session.post(self._url, headers=self._headers, data=payload, verify=False)
             except requests.exceptions.ConnectionError:
                 try:
@@ -145,7 +146,8 @@ def gettransaction_MP(tx):
     return host.call("gettransaction_MP", tx)
 
 def listblocktransactions_MP(height):
-    return host.call("listblocktransactions_MP", height)
+    #return host.call("listblocktransactions_MP", height)
+	return {"result": [tx["TxHash"] for tx in host.call("omni_listblocktransactions", height)["result"]]}
 
 def getproperty_MP(propertyid):
     return host.call("getproperty_MP", propertyid)
