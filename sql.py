@@ -966,14 +966,13 @@ def syncAddress(Address, Protocol):
 
     baldata=getallbalancesforaddress_MP(Address)['result']
     DExSales=getactivedexsells_MP()['result']
-
     for property in baldata:
-      PropertyID=property['propertyid']
-
+   	  PropertyID=property['propertyid']
+	  Reserved=0
       #get available/reserved balances
       if getdivisible_MP(PropertyID):
-        Available=int(decimal.Decimal(str(property['balance']))*decimal.Decimal(1e8))
-        Reserved=int(decimal.Decimal(str(property['reserved']))*decimal.Decimal(1e8))
+      	Available=int(decimal.Decimal(str(property['balance']))*decimal.Decimal(1e8))
+      	Reserved=int(decimal.Decimal(str(property['reserved']))*decimal.Decimal(1e8))
       else:
         Available=int(property['balance'])
         Available=int(property['reserved'])

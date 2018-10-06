@@ -51,7 +51,8 @@ else:
   printdebug(("Processing started at",now), 0)
 
   #block with first MP transaction
-  firstMPtxBlock=252317
+ # firstMPtxBlock=252317
+  firstMPtxBlock=0
 
   #get last known block processed from db
   currentBlock=dbSelect("select max(blocknumber) from blocks", None)[0][0]
@@ -188,11 +189,11 @@ else:
       expireCrowdsales(block_data['result']['time'], Protocol)
       #exodus address generates dev msc, sync our balance to match the generated balanace
       if config.TESTNET:
-        syncAddress('mpexoDuSkGGqvqrkrjiFng38QPkJQVFyqv', Protocol)
+        syncAddress('TsU8sJawyhhxidM28DcrFrvMs1tU9vJTbby', Protocol)
         #upadate temp orderbook
         #updateorderblob()
       else:
-        syncAddress('1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P', Protocol)
+        syncAddress('TsU8sJawyhhxidM28DcrFrvMs1tU9vJTbby', Protocol)
 
       #Also make sure we update the json data in SmartProperties table used by exchange view
       updateProperty(1,"Omni")
