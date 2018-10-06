@@ -978,6 +978,7 @@ def syncAddress(Address, Protocol):
         Available=int(property['reserved'])
 
       #find accepted balances (if exists)
+      Accepted=0
       for x in DExSales:
         if x['seller'] == Address and x['propertyid']==PropertyID:
           Accepted = x['amountaccepted']
