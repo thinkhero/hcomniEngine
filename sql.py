@@ -967,8 +967,8 @@ def syncAddress(Address, Protocol):
     baldata=getallbalancesforaddress_MP(Address)['result']
     DExSales=getactivedexsells_MP()['result']
     for property in baldata:
-   	  PropertyID=property['propertyid']
-	  Reserved=0
+      PropertyID=property['propertyid']
+      Reserved=0
       #get available/reserved balances
       if getdivisible_MP(PropertyID):
       	Available=int(decimal.Decimal(str(property['balance']))*decimal.Decimal(1e8))
