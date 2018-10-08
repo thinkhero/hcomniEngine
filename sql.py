@@ -1508,6 +1508,7 @@ def updateAddrStats(Address,Protocol,TxDBSerialNum,Block):
 
 
 def insertTxAddr(rawtx, Protocol, TxDBSerialNum, Block):
+    print(">>> begin to  insertTxAddr:", 8)
     printdebug("Starting insertTxAddr:", 8)
     printdebug("rawtx, Protocol, TxDBSerialNum, Block", 9)
     printdebug((rawtx, Protocol, TxDBSerialNum, Block,"\n"), 9)
@@ -1565,9 +1566,11 @@ def insertTxAddr(rawtx, Protocol, TxDBSerialNum, Block):
           AddressTxIndex+=1
 
     elif Protocol == "Omni":
+      print ">>> hello herer1"
       AddressTxIndex=0
       AddressRole="sender"
       txtype=get_TxType(rawtx['result']['type'])
+      print "txtype",txtype
       BalanceAvailableCreditDebit=None
       BalanceReservedCreditDebit=None
       BalanceAcceptedCreditDebit=None
@@ -2093,7 +2096,7 @@ def insertTxAddr(rawtx, Protocol, TxDBSerialNum, Block):
             updateBalance(Receiver, Protocol, PropertyID, Ecosystem, BalanceAvailableCreditDebit, BalanceReservedCreditDebit, BalanceAcceptedCreditDebit, TxDBSerialNum)
           #if we had a receiver then the tokens issued go to them, not to the issuer
           BalanceAvailableCreditDebit=None
-          
+        #print xuxioafeng
         #update smart property table
         insertProperty(rawtx, Protocol)
 
@@ -2125,6 +2128,7 @@ def insertTxAddr(rawtx, Protocol, TxDBSerialNum, Block):
           updateAddrStats(Address,Protocol,TxDBSerialNum,Block)
 
       elif txtype in [185,186]:
+	print ">>> hello here 3"
         #update freeze info/balances
         AddressRole = "issuer"
         BalanceAvailableCreditDebit=None
@@ -2134,20 +2138,22 @@ def insertTxAddr(rawtx, Protocol, TxDBSerialNum, Block):
                   "(Address, PropertyID, Protocol, TxDBSerialNum, AddressTxIndex, AddressRole, BalanceAvailableCreditDebit, BalanceReservedCreditDebit, BalanceAcceptedCreditDebit, linkedtxdbserialnum)"
                   "values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                   (Address, PropertyID, Protocol, TxDBSerialNum, AddressTxIndex, AddressRole, BalanceAvailableCreditDebit, BalanceReservedCreditDebit, BalanceAcceptedCreditDebit, linkedtxdbserialnum))
-
+	print Address, PropertyID, Protocol, TxDBSerialNum, AddressTxIndex, AddressRole, BalanceAvailableCreditDebit, BalanceReservedCreditDebit, BalanceAcceptedCreditDebit, linkedtxdbserialnum
         Address = rawtx['result']['referenceaddress']
         AddressRole = 'recipient'
         updateAddrStats(Address,Protocol,TxDBSerialNum,Block)
-        
+        print ">> hello here4" 
         ROWS=dbSelect("select BalanceAvailable,BalanceFrozen from addressbalances where address=%s and propertyid=%s", (Address, PropertyID))
-
+	#print ROWS[0]
         if txtype == 185:
-          BalanceAvailableCreditDebit = -int(ROWS[0][0])
-          BalanceFrozenCreditDebit = (BalanceAvailableCreditDebit*-1)
+	  print 185
+          #BalanceAvailableCreditDebit = -int(ROWS[0][0])
+          #BalanceFrozenCreditDebit = (BalanceAvailableCreditDebit*-1)
         elif txtype == 186:
-          BalanceAvailableCreditDebit = int(ROWS[0][1])
-          BalanceFrozenCreditDebit = (BalanceAvailableCreditDebit*-1)
-
+	  print "fads"
+          #BalanceAvailableCreditDebit = int(ROWS[0][1])
+          #BalanceFrozenCreditDebit = (BalanceAvailableCreditDebit*-1)
+	print ">>> hello here 5"
         dbExecute("insert into addressesintxs "
                   "(Address, PropertyID, Protocol, TxDBSerialNum, AddressTxIndex, AddressRole, BalanceAvailableCreditDebit, BalanceReservedCreditDebit, BalanceAcceptedCreditDebit, BalanceFrozenCreditDebit, linkedtxdbserialnum)"
                   "values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
@@ -2164,22 +2170,24 @@ def insertTxAddr(rawtx, Protocol, TxDBSerialNum, Block):
 
 
       #end if/elif txtype switch
-
+      print ">> hello here2"
       #write output of the address details
       dbExecute("insert into addressesintxs "
                 "(Address, PropertyID, Protocol, TxDBSerialNum, AddressTxIndex, AddressRole, BalanceAvailableCreditDebit, BalanceReservedCreditDebit, BalanceAcceptedCreditDebit, linkedtxdbserialnum)"
                 "values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (Address, PropertyID, Protocol, TxDBSerialNum, AddressTxIndex, AddressRole, BalanceAvailableCreditDebit, BalanceReservedCreditDebit, BalanceAcceptedCreditDebit, linkedtxdbserialnum))
-
       if Valid:
         updateBalance(Address, Protocol, PropertyID, Ecosystem, BalanceAvailableCreditDebit, BalanceReservedCreditDebit, BalanceAcceptedCreditDebit, TxDBSerialNum)
+      #print xuxaofeng
 
 
 def insertTx(rawtx, Protocol, blockheight, seq, TxDBSerialNum):
+    print ">> begin to inserTx"
     printdebug("Starting insertTx:", 8)
     printdebug("rawtx, Protocol, blockheight, seq, TxDBSerialNum", 9)
     printdebug((rawtx, Protocol, blockheight, seq, TxDBSerialNum,"\n"), 9)
-
+    print("===",rawtx, Protocol, blockheight, seq, TxDBSerialNum)
+    
     TxHash = rawtx['result']['txid']
     TxBlockTime = datetime.datetime.utcfromtimestamp(rawtx['result']['blocktime'])
     TxErrorCode = rawtx['error']
@@ -2253,13 +2261,17 @@ def insertTx(rawtx, Protocol, blockheight, seq, TxDBSerialNum):
                   "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
                   (TxHash, Protocol, TxType, TxVersion, Ecosystem, TxState, TxErrorCode, TxBlockNumber, TxSeqInBlock, TxBlockTime))
     else:
+	print("accessed into here1")
         dbExecute("INSERT into transactions "
                   "(TxHash, Protocol, TxType, TxVersion, Ecosystem, TxState, TxErrorCode, TxBlockNumber, TxSeqInBlock, TxDBSerialNum, TxRecvTime ) "
                   "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
                   (TxHash, Protocol, TxType, TxVersion, Ecosystem, TxState, TxErrorCode, TxBlockNumber, TxSeqInBlock, TxDBSerialNum, TxBlockTime))
-
+	print (">>> here1")
+    print (TxHash, Protocol, TxType, TxVersion, Ecosystem, TxState, TxErrorCode, TxBlockNumber, TxSeqInBlock, TxDBSerialNum, TxBlockTime)
+    print(">>> here2")
     serial=dbSelect("Select TxDBSerialNum from transactions where txhash=%s and protocol=%s", (TxHash, Protocol))
     dbExecute("insert into txjson (txdbserialnum, protocol, txdata) values (%s,%s,%s)", (serial[0]['txdbserialnum'], Protocol, json.dumps(rawtx['result'])) )
+    print (">> here3")
     return serial[0]['txdbserialnum']
 
 

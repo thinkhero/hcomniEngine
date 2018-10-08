@@ -4,9 +4,10 @@ import time, json
 class RPCHost():
     def __init__(self):
         USER=getpass.getuser()
+	print("USER",USER)
         self._session = requests.Session()
         try:
-            with open('/home/'+USER+'/.bitcoin/bitcoin.conf') as fp:
+            with open('/home/xu/.bitcoin/bitcoin.conf') as fp:
                 RPCPORT="12009"
                 RPCHOST="localhost"
                 RPCSSL=False
@@ -29,7 +30,7 @@ class RPCHost():
                             RPCSSL=False
         except IOError as e:
             response='{"error": "Unable to load bitcoin config file. Please Notify Site Administrator"}'
-            return response
+            return response.text
         if RPCSSL:
             self._url = "https://"+RPCUSER+":"+RPCPASS+"@"+RPCHOST+":"+RPCPORT
 	    self._hcwalletUrl = "https://"+RPCUSER+":"+RPCPASS+"@"+RPCHOST+":"+"12010"
@@ -52,11 +53,12 @@ class RPCHost():
         while True:
             try:
                 if (rpcMethod.find("omni") >-1):
-		    print("call hcd")
+		    print("call hcwallet first")
 		    print("request method contain omni")
                     response = self._session.post(self._hcwalletUrl, headers=self._headers, data=payload, verify=False)
+		    print("hcwallet response",response.json())
                 else:
-		    print("call hcwallet first")
+		    print("call hcd")
                     response = self._session.post(self._url, headers=self._headers, data=payload, verify=False)
             except requests.exceptions.ConnectionError:
                 try:
@@ -143,7 +145,12 @@ def getallbalancesforid_MP(propertyid):
     return host.call("getallbalancesforid_MP", propertyid)
 
 def gettransaction_MP(tx):
-    return host.call("gettransaction_MP", tx)
+    return  host.call("gettransaction_MP", tx)
+    #result = host.call("gettransaction_MP", tx)["result"]
+    #result.pop("invalidreason")
+    #print ("result",result)
+    #result.pop("")
+    #return {"result":result,"error":None}
 
 def listblocktransactions_MP(height):
     #return host.call("listblocktransactions_MP", height)

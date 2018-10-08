@@ -1,12 +1,12 @@
 import psycopg2, psycopg2.extras
-import sys
+import sys, os
 import getpass
 
 def sql_connect(OUSER=None,OPASS=None):
     global con
     USER=getpass.getuser()
     try:
-      with open('/home/'+USER+'/.omni/sql.conf') as fp:
+      with open('/home/xu/.omni/sql.conf') as fp:
         DBPORT="5432"
         for line in fp:
           #print line
@@ -57,11 +57,15 @@ def dbSelect(statement, values=None):
         sys.exit(1)
 
 def dbExecute(statement, values=None):
+    print "=" * 20, statement, values
     dbInit()
     try:
         dbc.execute(statement, values)
     except psycopg2.DatabaseError, e:
         print 'Error', e, 'Rollback returned: ', dbRollback()
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print(exc_type, fname, exc_tb.tb_lineno)
         sys.exit(1)
 
 def dbUpgradeExecute(ouser, opass, statement, values=None):

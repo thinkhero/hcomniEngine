@@ -99,7 +99,6 @@ else:
   #get highest TxDBSerialNum (number of rows in the Transactions table)
   #22111443 btc tx's before block 252317
   TxDBSerialNum=dbSelect('select coalesce(max(txdbserialnum), 22111443) from transactions')[0][0]+1
-
   #main loop, process new blocks
   while currentBlock <= endBlock:
     try:
@@ -154,7 +153,7 @@ else:
 
       #Process Mastercoin Transacations (if any)
       Protocol="Omni"
-
+      print ">>> TxDBSerialNum",TxDBSerialNum
       #Find number of msc tx
       y=len(block_data_MP['result'])
       if y != 0:
@@ -165,7 +164,7 @@ else:
       #MP tx processing
       for tx in block_data_MP['result']:
         rawtx=gettransaction_MP(tx)
-  
+ 	print ">>> TxDBSerialNum2",TxDBSerialNum 
         #Process the bare tx and insert it into the db
         #TxDBSerialNum can be specified for explit insert or left out to auto assign from next value in db
         serial=insertTx(rawtx, Protocol, height, x, TxDBSerialNum)
@@ -189,11 +188,11 @@ else:
       expireCrowdsales(block_data['result']['time'], Protocol)
       #exodus address generates dev msc, sync our balance to match the generated balanace
       if config.TESTNET:
-        syncAddress('TsU8sJawyhhxidM28DcrFrvMs1tU9vJTbby', Protocol)
+        syncAddress('TsSmoC9HdBhDhq4ut4TqJY7SBjPqJFAPkGK', Protocol)
         #upadate temp orderbook
         #updateorderblob()
       else:
-        syncAddress('TsU8sJawyhhxidM28DcrFrvMs1tU9vJTbby', Protocol)
+        syncAddress('TsSmoC9HdBhDhq4ut4TqJY7SBjPqJFAPkGK', Protocol)
 
       #Also make sure we update the json data in SmartProperties table used by exchange view
       updateProperty(1,"Omni")
