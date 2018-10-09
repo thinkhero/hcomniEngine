@@ -153,7 +153,7 @@ else:
 
       #Process Mastercoin Transacations (if any)
       Protocol="Omni"
-      print ">>> TxDBSerialNum",TxDBSerialNum
+
       #Find number of msc tx
       y=len(block_data_MP['result'])
       if y != 0:
@@ -164,7 +164,6 @@ else:
       #MP tx processing
       for tx in block_data_MP['result']:
         rawtx=gettransaction_MP(tx)
- 	print ">>> TxDBSerialNum2",TxDBSerialNum 
         #Process the bare tx and insert it into the db
         #TxDBSerialNum can be specified for explit insert or left out to auto assign from next value in db
         serial=insertTx(rawtx, Protocol, height, x, TxDBSerialNum)
