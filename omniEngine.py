@@ -164,6 +164,8 @@ else:
       #MP tx processing
       for tx in block_data_MP['result']:
         rawtx=gettransaction_MP(tx)
+        if "txid" not in rawtx:
+          continue
         #Process the bare tx and insert it into the db
         #TxDBSerialNum can be specified for explit insert or left out to auto assign from next value in db
         serial=insertTx(rawtx, Protocol, height, x, TxDBSerialNum)
