@@ -7,7 +7,7 @@ class RPCHost():
 	print("USER",USER)
         self._session = requests.Session()
         try:
-            with open('/home/xu/.bitcoin/bitcoin.conf') as fp:
+            with open('/home/'+USER+'/.bitcoin/bitcoin.conf') as fp:
                 RPCPORT="12009"
                 RPCHOST="localhost"
                 RPCSSL=False
