@@ -16,7 +16,13 @@ insert into Protocols values (
 
 /*Load the Bitcoin property*/
 insert into smartproperties (Protocol, propertyid, issuer, createtxdbserialnum, lasttxdbserialnum, propertyname, propertytype, propertydata) values (
-     'Bitcoin', 0, 'Satoshi Nakamoto', -1, -1, 'BTC', 2, '{"name":"BTC", "blocktime":1231006505, "data":"The Times 03/Jan/2009 Chancellor on brink of second bailout for banks", "issuer":"Satoshi Nakamoto", "url":"http://www.bitcoin.org", "propertyid":0 ,"divisible": true}');
+     'Bitcoin', 0, 'Satoshi Nakamoto', -1, -1, 'HC', 2, '{"name":"HC", "blocktime":1231006505, "data":"The Times 03/Jan/2009 Chancellor on brink of second bailout for banks", "issuer":"Satoshi Nakamoto", "url":"http://www.bitcoin.org", "propertyid":0 ,"divisible": true}');
+
+insert into smartproperties (Protocol, propertyid, issuer, createtxdbserialnum, lasttxdbserialnum, propertyname, propertydata) values (
+     'Omni', 1, 'TsY5aGpApd5snxXm2yVMQ7AsXHzoK2kX1fo', -1, -1, 'Omni', '{"url": "http://www.omnilayer.org", "data": "Omni serve as the binding between HC, smart properties and contracts created on the Omni Layer.", "name": "Omni", "issuer": "TsY5aGpApd5snxXm2yVMQ7AsXHzoK2kX1fo", "blocktime": "1377994675", "divisible": true, "propertyid": 1, "totaltokens": "617796.80036918"}');
+	 
+insert into smartproperties (Protocol, propertyid, issuer, createtxdbserialnum, lasttxdbserialnum, propertyname, propertydata) values (
+     'Omni', 2, 'TsY5aGpApd5snxXm2yVMQ7AsXHzoK2kX1fo', -1, -1, 'Test Omni', '{ "url": "http://www.omnilayer.org", "data": "Test Omni serve as the binding between HC, smart properties and contracts created on the Omni Layer.", "name": "Test Omni", "issuer": "TsY5aGpApd5snxXm2yVMQ7AsXHzoK2kX1fo", "blocktime": "1377994675", "divisible": true, "propertyid": 2, "totaltokens": "563162.35759628"}');
 
 /*Load the list of Fiat Currencies we track */
 
