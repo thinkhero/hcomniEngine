@@ -4,17 +4,17 @@ import time, json
 class RPCHost():
     def __init__(self):
         USER=getpass.getuser()
-	print("USER",USER)
         self._session = requests.Session()
         try:
             with open('/home/'+USER+'/.bitcoin/bitcoin.conf') as fp:
                 RPCPORT="12009"
+                WALLETRPCPORT="12010"
                 RPCHOST="localhost"
                 RPCSSL=False
                 for line in fp:
                     #print line
-                    if line.split('=')[0] == "testnet" and line.split('=')[1] == "1":
-                        RPCPORT="12009"
+                    if line.split('=')[0] == "testnet" and line.split('=')[1].strip() == "1":
+                        RPCPORT="14009"
                     elif line.split('=')[0] == "rpcuser":
                         RPCUSER=line.split('=')[1].strip()
                     elif line.split('=')[0] == "rpcpassword":
@@ -23,6 +23,8 @@ class RPCHost():
                         RPCHOST=line.split('=')[1].strip()
                     elif line.split('=')[0] == "rpcport":
                         RPCPORT=line.split('=')[1].strip()
+                    elif line.split('=')[0] == "walletrpcport":
+                        WALLETRPCPORT=line.split('=')[1].strip()
                     elif line.split('=')[0] == "rpcssl":
                         if line.split('=')[1].strip() == "1":
                             RPCSSL=True
@@ -33,54 +35,26 @@ class RPCHost():
             return response
         if RPCSSL:
             self._url = "https://"+RPCUSER+":"+RPCPASS+"@"+RPCHOST+":"+RPCPORT
-	    self._hcwalletUrl = "https://"+RPCUSER+":"+RPCPASS+"@"+RPCHOST+":"+"12010"
+            self._walleturl = "https://"+RPCUSER+":"+RPCPASS+"@"+RPCHOST+":"+WALLETRPCPORT
         else:
             self._url = "http://"+RPCUSER+":"+RPCPASS+"@"+RPCHOST+":"+RPCPORT
-	    self._hcwalletUrl = "http://"+RPCUSER+":"+RPCPASS+"@"+RPCHOST+":"+"12010"
+            self._walleturl = "http://"+RPCUSER+":"+RPCPASS+"@"+RPCHOST+":"+WALLETRPCPORT
         self._headers = {'content-type': 'application/json'}
+
     def call(self, rpcMethod, *params):
-        print("-----begin to call:origin rpcMethod",rpcMethod)
-        print("origin params",params)
-        if (rpcMethod.find("_MP") > -1):
-            print("rpcMethod container _MP")
-            Method_split = rpcMethod.split("_")
-            rpcMethod = "omni_"+Method_split[0]
-            print("new rpcMethod",rpcMethod)
         payload = json.dumps({"method": rpcMethod, "params": list(params), "jsonrpc": "2.0"})
-        print ("rpcclient.py:",payload)
         tries = 10
         hadConnectionFailures = False
         while True:
             try:
-                if (rpcMethod.find("omni") >-1):
-		    print("call hcwallet first")
-		    print("request method contain omni")
-                    response = self._session.post(self._hcwalletUrl, headers=self._headers, data=payload, verify=False)
-		    print("hcwallet response",response.json())
-                else:
-		    print("call hcd")
-                    response = self._session.post(self._url, headers=self._headers, data=payload, verify=False)
+                response = self._session.post(self._url, headers=self._headers, data=payload, verify=False)
             except requests.exceptions.ConnectionError:
-                try:
-                    print("call hcwallet")
-                    response = self._session.post(self._hcwalletUrl, headers=self._headers, data=payload, verify=False)
-                except requests.exceptions.ConnectionError:
-                    tries -= 1
-                    if tries == 0:
-                        raise Exception('Failed to connect for remote procedure call.')
-                    hadFailedConnections = True
-                    print("Couldn't connect for remote procedure call, will sleep for ten seconds and then try again ({} more tries)".format(tries))
-                    time.sleep(10)
-                else:
-                    if hadConnectionFailures:
-                        print('Connected for remote procedure call after retry.')
-                    break
-                # tries -= 1
-                # if tries == 0:
-                #     raise Exception('Failed to connect for remote procedure call.')
-                # hadFailedConnections = True
-                # print("Couldn't connect for remote procedure call, will sleep for ten seconds and then try again ({} more tries)".format(tries))
-                # time.sleep(10)
+                tries -= 1
+                if tries == 0:
+                    raise Exception('Failed to connect for remote procedure call.')
+                hadFailedConnections = True
+                print("Couldn't connect for remote procedure call, will sleep for ten seconds and then try again ({} more tries)".format(tries))
+                time.sleep(10)
             else:
                 if hadConnectionFailures:
                     print('Connected for remote procedure call after retry.')
@@ -93,6 +67,31 @@ class RPCHost():
         #return responseJSON['result']
         return responseJSON
 
+    def callwallet(self, rpcMethod, *params):
+        payload = json.dumps({"method": rpcMethod, "params": list(params), "jsonrpc": "2.0"})
+        tries = 10
+        hadConnectionFailures = False
+        while True:
+            try:
+                response = self._session.post(self._walleturl, headers=self._headers, data=payload, verify=False)
+            except requests.exceptions.ConnectionError:
+                tries -= 1
+                if tries == 0:
+                    raise Exception('Failed to connect for remote procedure call.')
+                hadFailedConnections = True
+                print("Couldn't connect for remote procedure call, will sleep for ten seconds and then try again ({} more tries)".format(tries))
+                time.sleep(10)
+            else:
+                if hadConnectionFailures:
+                    print('Connected for remote procedure call after retry.')
+                break
+        if not response.status_code in (200, 500):
+            raise Exception('RPC connection failure: ' + str(response.status_code) + ' ' + response.reason)
+        responseJSON = response.json()
+        if 'error' in responseJSON and responseJSON['error'] != None:
+            raise Exception('Error in ' + rpcMethod + ' RPC call: ' + str(responseJSON['error']))
+        #return responseJSON['result']
+        return responseJSON
 
 #Define / Create RPC connection
 host=RPCHost()
@@ -126,7 +125,7 @@ def decoderawtransaction(rawtx):
     return host.call("decoderawtransaction", rawtx)
 
 def omni_decodetransaction(rawtx):
-    return host.call("omni_decodetransaction", rawtx)
+    return host.callwallet("omni_decodetransaction", rawtx)
 
 def estimateFee(blocks=4):
     return host.call("estimatefee", blocks)
@@ -136,101 +135,96 @@ def gettxout(txid,vout,unconfirmed=True):
 
 ## Omni Specific RPC calls
 def getbalance_MP(addr, propertyid):
-    return host.call("omni_getbalance", addr, propertyid)
+    return host.callwallet("omni_getbalance", addr, propertyid)
 
 def getallbalancesforaddress_MP(addr):
-    return host.call("omni_getallbalancesforaddress", addr)
+    return host.callwallet("omni_getallbalancesforaddress", addr)
 
 def getallbalancesforid_MP(propertyid):
-    return host.call("omni_getallbalancesforid", propertyid)
+    return host.callwallet("omni_getallbalancesforid", propertyid)
 
 def gettransaction_MP(tx):
-    return  host.call("omni_gettransaction", tx)
-    #result = host.call("gettransaction_MP", tx)["result"]
-    #result.pop("invalidreason")
-    #print ("result",result)
-    #result.pop("")
-    #return {"result":result,"error":None}
+    return  host.callwallet("omni_gettransaction", tx)
 
 def listblocktransactions_MP(height):
     #return host.call("listblocktransactions_MP", height)
-	return {"result": [tx["TxHash"] for tx in host.call("omni_listblocktransactions", height)["result"]]}
+	return {"result": [tx["TxHash"] for tx in host.callwallet("omni_listblocktransactions", height)["result"]]}
 
 def getproperty_MP(propertyid):
-    return host.call("omni_getproperty", propertyid)
+    return host.callwallet("omni_getproperty", propertyid)
 
 def listproperties_MP():
-    return host.call("omni_listproperties")
+    return host.callwallet("omni_listproperties")
 
 def getcrowdsale_MP(propertyid):
-    return host.call("omni_getcrowdsale", propertyid)
+    return host.callwallet("omni_getcrowdsale", propertyid)
 
 def getactivecrowdsales_MP():
-    return host.call("omni_getactivecrowdsales")
+    return host.callwallet("omni_getactivecrowdsales")
 
 def getactivedexsells_MP():
-    return host.call("omni_getactivedexsells")
+    return host.callwallet("omni_getactivedexsells")
 
 def getdivisible_MP(propertyid):
     return getproperty_MP(propertyid)['result']['divisible']
 
 def getgrants_MP(propertyid):
-    return host.call("omni_getgrants", propertyid)
+    return host.callwallet("omni_getgrants", propertyid)
 
 def gettradessince_MP():
-    return host.call("omni_gettradessince")
+    return host.callwallet("omni_gettradessince")
 
 def gettrade(txhash):
-    return host.call("omni_gettrade", txhash)
+    return host.callwallet("omni_gettrade", txhash)
 
 def getsto_MP(txid):
-    return host.call("omni_getsto", txid , "*")
+    return host.callwallet("omni_getsto", txid , "*")
 
 def omni_listpendingtransactions():
-    return host.call("omni_listpendingtransactions")
+    return host.callwallet("omni_listpendingtransactions")
 
 def omni_getpayload(txid):
-    return host.call("omni_getpayload",txid)
+    return host.callwallet("omni_getpayload",txid)
 
 def getsimplesendPayload(propertyid, amount):
-    return host.call("omni_createpayload_simplesend", int(propertyid), amount)
+    return host.callwallet("omni_createpayload_simplesend", int(propertyid), amount)
 def getsendallPayload(ecosystem):
-    return host.call("omni_createpayload_sendall", int(ecosystem))
+    return host.callwallet("omni_createpayload_sendall", int(ecosystem))
 def getdexsellPayload(propertyidforsale, amountforsale, amountdesired, paymentwindow, minacceptfee, action):
-    return host.call("omni_createpayload_dexsell", int(propertyidforsale), amountforsale, amountdesired, int(paymentwindow), minacceptfee, int(action))
+    return host.callwallet("omni_createpayload_dexsell", int(propertyidforsale), amountforsale, amountdesired, int(paymentwindow), minacceptfee, int(action))
 def getdexacceptPayload(propertyid, amount):
-    return host.call("omni_createpayload_dexaccept", int(propertyid), amount)
+    return host.callwallet("omni_createpayload_dexaccept", int(propertyid), amount)
 def getstoPayload(propertyid, amount):
-    return host.call("omni_createpayload_sto", int(propertyid), amount)
+    return host.callwallet("omni_createpayload_sto", int(propertyid), amount)
 def getgrantPayload(propertyid, amount, memo):
-    return host.call("omni_createpayload_grant", int(propertyid), amount, memo)
+    return host.callwallet("omni_createpayload_grant", int(propertyid), amount, memo)
 def getrevokePayload(propertyid, amount, memo):
-    return host.call("omni_createpayload_revoke", int(propertyid), amount, memo)
+    return host.callwallet("omni_createpayload_revoke", int(propertyid), amount, memo)
 def getchangeissuerPayload(propertyid):
-    return host.call("omni_createpayload_changeissuer", int(propertyid))
+    return host.callwallet("omni_createpayload_changeissuer", int(propertyid))
 def gettradePayload(propertyidforsale, amountforsale, propertiddesired, amountdesired):
-    return host.call("omni_createpayload_trade", int(propertyidforsale), amountforsale, int(propertiddesired), amountdesired)
+    return host.callwallet("omni_createpayload_trade", int(propertyidforsale), amountforsale, int(propertiddesired), amountdesired)
 def getissuancefixedPayload(ecosystem, divisible, previousid, category,subcategory, name, url, data, amount):
-    return host.call("omni_createpayload_issuancefixed", int(ecosystem), int(divisible), int(previousid), category,subcategory, name, url, data, amount)
+    return host.callwallet("omni_createpayload_issuancefixed", int(ecosystem), int(divisible), int(previousid), category,subcategory, name, url, data, amount)
 def getissuancecrowdsalePayload(ecosystem, divisible, previousid, category,subcategory, name, url, data, propertyiddesired, tokensperunit, deadline, earlybonus, issuerpercentage):
-    return host.call("omni_createpayload_issuancecrowdsale", int(ecosystem), int(divisible), int(previousid), category,subcategory, name, url, data, int(propertyiddesired), tokensperunit, int(deadline), int(earlybonus), int(issuerpercentage))
+    return host.callwallet("omni_createpayload_issuancecrowdsale", int(ecosystem), int(divisible), int(previousid), category,subcategory, name, url, data, int(propertyiddesired), tokensperunit, int(deadline), int(earlybonus), int(issuerpercentage))
 def getissuancemanagedPayload(ecosystem, divisible, previousid, category,subcategory, name, url, data):
-    return host.call("omni_createpayload_issuancemanaged", int(ecosystem), int(divisible), int(previousid), category,subcategory, name, url, data)
+    return host.callwallet("omni_createpayload_issuancemanaged", int(ecosystem), int(divisible), int(previousid), category,subcategory, name, url, data)
 def getclosecrowdsalePayload(propertyid):
-    return host.call("omni_createpayload_closecrowdsale", int(propertyid))
+    return host.callwallet("omni_createpayload_closecrowdsale", int(propertyid))
 def getcanceltradesbypricePayload(propertyidforsale, amountforsale, propertiddesired, amountdesired):
-    return host.call("omni_createpayload_canceltradesbyprice", int(propertyidforsale), amountforsale, int(propertiddesired), amountdesired)
+    return host.callwallet("omni_createpayload_canceltradesbyprice", int(propertyidforsale), amountforsale, int(propertiddesired), amountdesired)
 def getcanceltradesbypairPayload(propertyidforsale, propertiddesired):
-    return host.call("omni_createpayload_canceltradesbypair", int(propertyidforsale), int(propertiddesired))
+    return host.callwallet("omni_createpayload_canceltradesbypair", int(propertyidforsale), int(propertiddesired))
 def getcancelalltradesPayload(ecosystem):
-    return host.call("omni_createpayload_cancelalltrades", int(ecosystem))
+    return host.callwallet("omni_createpayload_cancelalltrades", int(ecosystem))
 def createrawtx_opreturn(payload, rawtx=None):
-    return host.call("omni_createrawtx_opreturn", rawtx, payload)
+    return host.callwallet("omni_createrawtx_opreturn", rawtx, payload)
 def createrawtx_multisig(payload, seed, pubkey, rawtx=None):
-    return host.call("omni_createrawtx_multisig", rawtx, payload, seed, pubkey)
+    return host.callwallet("omni_createrawtx_multisig", rawtx, payload, seed, pubkey)
 def createrawtx_input(txhash, index, rawtx=None):
-    return host.call("omni_createrawtx_input", rawtx, txhash, index)
+    return host.callwallet("omni_createrawtx_input", rawtx, txhash, index)
 def createrawtx_reference(destination, rawtx=None):
-    return host.call("omni_createrawtx_reference", rawtx, destination)
+    return host.callwallet("omni_createrawtx_reference", rawtx, destination)
 def createrawtx_change(rawtx, previnputs, destination, fee):
-    return host.call("omni_createrawtx_change", rawtx, previnputs, destination, fee)
+    return host.callwallet("omni_createrawtx_change", rawtx, previnputs, destination, fee)
