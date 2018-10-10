@@ -7,13 +7,13 @@ class RPCHost():
         self._session = requests.Session()
         try:
             with open('/home/'+USER+'/.bitcoin/bitcoin.conf') as fp:
-                RPCPORT="12009"
+                RPCPORT="12010"
                 RPCHOST="localhost"
                 RPCSSL=False
                 for line in fp:
                     #print line
                     if line.split('=')[0] == "testnet" and line.split('=')[1].strip() == "1":
-                        RPCPORT="12009"
+                        RPCPORT="12010"
                     elif line.split('=')[0] == "rpcuser":
                         RPCUSER=line.split('=')[1].strip()
                     elif line.split('=')[0] == "rpcpassword":
