@@ -52,7 +52,7 @@ else:
 
   #block with first MP transaction
  # firstMPtxBlock=252317
-  firstMPtxBlock=0
+  firstMPtxBlock=46000
 
   #get last known block processed from db
   currentBlock=dbSelect("select max(blocknumber) from blocks", None)[0][0]
