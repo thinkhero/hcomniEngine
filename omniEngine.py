@@ -193,7 +193,7 @@ else:
         #upadate temp orderbook
         #updateorderblob()
       else:
-        syncAddress('TsSmoC9HdBhDhq4ut4TqJY7SBjPqJFAPkGK', Protocol)
+        syncAddress('HsMFSvWd7FxpGUqbwYtGZMNEb2zyZ2zaqpk', Protocol)
 
       #Also make sure we update the json data in SmartProperties table used by exchange view
       updateProperty(1,"Omni")
